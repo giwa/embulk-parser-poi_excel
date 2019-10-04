@@ -1,6 +1,7 @@
 package org.embulk.parser.poi_excel.visitor;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.embulk.parser.poi_excel.bean.PoiExcelColumnBean;
 import org.embulk.parser.poi_excel.visitor.embulk.CellVisitor;
 import org.embulk.spi.Column;
@@ -15,6 +16,8 @@ public class PoiExcelCellTypeVisitor {
 		this.visitorValue = visitorValue;
 		this.pageBuilder = visitorValue.getPageBuilder();
 	}
+
+
 
 	private static final String[] CELL_TYPE_STRING = { "NUMERIC", "STRING", "FORMULA", "BLANK", "BOOLEAN", "ERROR" };
 
@@ -34,5 +37,17 @@ public class PoiExcelCellTypeVisitor {
 		}
 
 		visitor.visitCellValueNumeric(column, cell, cellType);
+	}
+
+	public void visit(PoiExcelColumnBean bean, Cell cell, CellType cellType, CellVisitor visitor) {
+		assert cell != null;
+
+		Column column = bean.getColumn();
+		if (column.getType() instanceof StringType) {
+			String type = cellType.toString();
+			visitor.visitCellValueString(column, cell, type);
+			return;
+		}
+		visitor.visitCellValueNumeric(column, cell, cellType.ordinal());
 	}
 }

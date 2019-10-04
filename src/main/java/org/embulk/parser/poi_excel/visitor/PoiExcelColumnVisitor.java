@@ -3,6 +3,7 @@ package org.embulk.parser.poi_excel.visitor;
 import java.text.MessageFormat;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellReference;
 import org.embulk.parser.poi_excel.PoiExcelColumnValueType;
@@ -56,6 +57,12 @@ public class PoiExcelColumnVisitor implements ColumnVisitor {
 	@Override
 	public final void timestampColumn(Column column) {
 		visitCell0(column, factory.getTimestampCellVisitor());
+	}
+
+	@Override
+	public final void jsonColumn(Column column) {
+		// just ignore
+		// visitCell0(column, factory.getTimestampCellVisitor());
 	}
 
 	protected final void visitCell0(Column column, CellVisitor visitor) {
@@ -121,7 +128,7 @@ public class PoiExcelColumnVisitor implements ColumnVisitor {
 			visitCellType(bean, cell, cell.getCellType(), visitor);
 			return;
 		case CELL_CACHED_TYPE:
-			if (cell.getCellType() == Cell.CELL_TYPE_FORMULA) {
+			if (cell.getCellType() == CellType.FORMULA) {
 				visitCellType(bean, cell, cell.getCachedFormulaResultType(), visitor);
 			} else {
 				visitCellType(bean, cell, cell.getCellType(), visitor);
@@ -165,6 +172,11 @@ public class PoiExcelColumnVisitor implements ColumnVisitor {
 	}
 
 	private void visitCellType(PoiExcelColumnBean bean, Cell cell, int cellType, CellVisitor visitor) {
+		PoiExcelCellTypeVisitor delegator = factory.getPoiExcelCellTypeVisitor();
+		delegator.visit(bean, cell, cellType, visitor);
+	}
+
+	private void visitCellType(PoiExcelColumnBean bean, Cell cell, CellType cellType, CellVisitor visitor) {
 		PoiExcelCellTypeVisitor delegator = factory.getPoiExcelCellTypeVisitor();
 		delegator.visit(bean, cell, cellType, visitor);
 	}

@@ -65,6 +65,10 @@ public class PoiExcelParserPlugin implements ParserPlugin {
 		@Config("flush_count")
 		@ConfigDefault("100")
 		public int getFlushCount();
+
+		@Config("password")
+		@ConfigDefault("\"\"")
+		public String getPassword();
 	}
 
 	public interface SheetCommonOptionTask extends Task, ColumnCommonOptionTask {
@@ -157,6 +161,9 @@ public class PoiExcelParserPlugin implements ParserPlugin {
 	@Override
 	public void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput output) {
 		PluginTask task = taskSource.loadTask(PluginTask.class);
+		// TODO: delete this
+		System.out.println("NEW POIPOI");
+		System.out.println(task.getPassword());
 
 		List<String> sheetNames = new ArrayList<>();
 		Optional<String> sheetOption = task.getSheet();
@@ -172,8 +179,12 @@ public class PoiExcelParserPlugin implements ParserPlugin {
 			while (is.nextFile()) {
 				Workbook workbook;
 				try {
-					workbook = WorkbookFactory.create(is);
-				} catch (IOException | EncryptedDocumentException | InvalidFormatException e) {
+					if (task.getPassword().isEmpty()){
+						workbook = WorkbookFactory.create(is);
+					} else {
+						workbook = WorkbookFactory.create(is, task.getPassword());
+					}
+				} catch (IOException | EncryptedDocumentException e) {
 					throw new RuntimeException(e);
 				}
 
