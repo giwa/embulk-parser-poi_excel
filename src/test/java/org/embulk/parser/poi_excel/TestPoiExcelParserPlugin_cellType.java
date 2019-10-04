@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.embulk.parser.EmbulkPluginTester;
 import org.embulk.parser.EmbulkTestOutputPlugin.OutputRecord;
 import org.embulk.parser.EmbulkTestParserConfig;
@@ -38,11 +39,11 @@ public class TestPoiExcelParserPlugin_cellType {
 			List<OutputRecord> result = tester.runParser(inFile, parser);
 
 			assertThat(result.size(), is(5));
-			check1(result, 0, Cell.CELL_TYPE_NUMERIC, "NUMERIC");
-			check1(result, 1, Cell.CELL_TYPE_STRING, "STRING");
-			check1(result, 2, Cell.CELL_TYPE_FORMULA, "FORMULA");
-			check1(result, 3, Cell.CELL_TYPE_BOOLEAN, "BOOLEAN");
-			check1(result, 4, Cell.CELL_TYPE_FORMULA, "FORMULA");
+			check1(result, 0, CellType.NUMERIC, "NUMERIC");
+			check1(result, 1, CellType.STRING, "STRING");
+			check1(result, 2, CellType.FORMULA, "FORMULA");
+			check1(result, 3, CellType.BOOLEAN, "BOOLEAN");
+			check1(result, 4, CellType.FORMULA, "FORMULA");
 		}
 	}
 
@@ -61,18 +62,26 @@ public class TestPoiExcelParserPlugin_cellType {
 			List<OutputRecord> result = tester.runParser(inFile, parser);
 
 			assertThat(result.size(), is(5));
-			check1(result, 0, Cell.CELL_TYPE_NUMERIC, "NUMERIC");
-			check1(result, 1, Cell.CELL_TYPE_STRING, "STRING");
-			check1(result, 2, Cell.CELL_TYPE_BOOLEAN, "BOOLEAN");
-			check1(result, 3, Cell.CELL_TYPE_BOOLEAN, "BOOLEAN");
-			check1(result, 4, Cell.CELL_TYPE_ERROR, "ERROR");
+			check1(result, 0, CellType.NUMERIC, "NUMERIC");
+			check1(result, 1, CellType.STRING, "STRING");
+			check1(result, 2, CellType.BOOLEAN, "BOOLEAN");
+			check1(result, 3, CellType.BOOLEAN, "BOOLEAN");
+			check1(result, 4, CellType.ERROR, "ERROR");
 		}
 	}
 
+	// TODO: delete this
 	private void check1(List<OutputRecord> result, int index, long l, String s) throws ParseException {
 		OutputRecord r = result.get(index);
-		// System.out.println(r);
+		System.out.println(r);
 		assertThat(r.getAsLong("long"), is(l));
+		assertThat(r.getAsString("string"), is(s));
+	}
+
+	private void check1(List<OutputRecord> result, int index, CellType l, String s) throws ParseException {
+		OutputRecord r = result.get(index);
+		System.out.println(r);
+		assertThat(r.getAsLong("long"), is(l.ordinal()));
 		assertThat(r.getAsString("string"), is(s));
 	}
 }

@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.embulk.parser.EmbulkPluginTester;
 import org.embulk.parser.EmbulkTestOutputPlugin.OutputRecord;
@@ -44,11 +45,11 @@ public class TestPoiExcelParserPlugin_cellStyle {
 			List<OutputRecord> result = tester.runParser(inFile, parser);
 
 			assertThat(result.size(), is(5));
-			check1(result, 0, "red", 255, 0, 0, "top", CellStyle.BORDER_THIN, 0, 0, 0);
-			check1(result, 1, "green", 0, 128, 0, null, 0, 0, 0, 0);
-			check1(result, 2, "blue", 0, 0, 255, "left", 0, 0, CellStyle.BORDER_THIN, 0);
-			check1(result, 3, "white", 255, 255, 255, "right", 0, 0, 0, CellStyle.BORDER_THIN);
-			check1(result, 4, "black", 0, 0, 0, "bottom", 0, CellStyle.BORDER_MEDIUM, 0, 0);
+			check1(result, 0, "red", 255, 0, 0, "top", BorderStyle.THIN, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE);
+			check1(result, 1, "green", 0, 128, 0, null, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE);
+			check1(result, 2, "blue", 0, 0, 255, "left", BorderStyle.NONE, BorderStyle.NONE, BorderStyle.THIN, BorderStyle.NONE);
+			check1(result, 3, "white", 255, 255, 255, "right", BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.THIN);
+			check1(result, 4, "black", 0, 0, 0, "bottom", BorderStyle.NONE, BorderStyle.MEDIUM, BorderStyle.NONE, BorderStyle.NONE);
 		}
 	}
 
@@ -66,6 +67,20 @@ public class TestPoiExcelParserPlugin_cellStyle {
 		assertThat(record.getAsLong("border-all"), is(top << 24 | bottom << 16 | left << 8 | right));
 	}
 
+	private void check1(List<OutputRecord> result, int index, String colorText, int r, int g, int b, String borderText,
+						BorderStyle top, BorderStyle bottom, BorderStyle left, BorderStyle right) {
+		OutputRecord record = result.get(index);
+		System.out.println(record);
+		assertThat(record.getAsString("color-text"), is(colorText));
+		assertThat(record.getAsString("color"), is(String.format("%02x%02x%02x", r, g, b)));
+		assertThat(record.getAsString("border-text"), is(borderText));
+		assertThat(record.getAsLong("border-top"), is(top.getCode()));
+		assertThat(record.getAsLong("border-bottom"), is(bottom.getCode()));
+		assertThat(record.getAsLong("border-left"), is(left.getCode()));
+		assertThat(record.getAsLong("border-right"), is(right.getCode()));
+		assertThat(record.getAsLong("border-all"), is(top.getCode() << 24 | bottom.getCode() << 16 | left.getCode() << 8 | right.getCode()));
+	}
+
 	@Theory
 	public void testStyle_all(String excelFile) throws ParseException {
 		try (EmbulkPluginTester tester = new EmbulkPluginTester()) {
@@ -81,14 +96,15 @@ public class TestPoiExcelParserPlugin_cellStyle {
 			List<OutputRecord> result = tester.runParser(inFile, parser);
 
 			assertThat(result.size(), is(5));
-			check2(result, 0, "red", 255, 0, 0, "top", CellStyle.BORDER_THIN, 0, 0, 0);
-			check2(result, 1, "green", 0, 128, 0, null, 0, 0, 0, 0);
-			check2(result, 2, "blue", 0, 0, 255, "left", 0, 0, CellStyle.BORDER_THIN, 0);
-			check2(result, 3, "white", 255, 255, 255, "right", 0, 0, 0, CellStyle.BORDER_THIN);
-			check2(result, 4, "black", 0, 0, 0, "bottom", 0, CellStyle.BORDER_MEDIUM, 0, 0);
+			check2(result, 0, "red", 255, 0, 0, "top", BorderStyle.THIN, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE);
+			check2(result, 1, "green", 0, 128, 0, null, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE);
+			check2(result, 2, "blue", 0, 0, 255, "left", BorderStyle.NONE, BorderStyle.NONE, BorderStyle.THIN, BorderStyle.NONE);
+			check2(result, 3, "white", 255, 255, 255, "right", BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.THIN);
+			check2(result, 4, "black", 0, 0, 0, "bottom", BorderStyle.NONE, BorderStyle.MEDIUM, BorderStyle.NONE, BorderStyle.NONE);
 		}
 	}
 
+	// TODO: delete this
 	private void check2(List<OutputRecord> result, int index, String colorText, int r, int g, int b, String borderText,
 			long top, long bottom, long left, long right) {
 		OutputRecord record = result.get(index);
@@ -113,6 +129,30 @@ public class TestPoiExcelParserPlugin_cellStyle {
 		}
 	}
 
+	private void check2(List<OutputRecord> result, int index, String colorText, int r, int g, int b, String borderText,
+						BorderStyle top, BorderStyle bottom, BorderStyle left, BorderStyle right) {
+		OutputRecord record = result.get(index);
+		// System.out.println(record);
+		assertThat(record.getAsString("color-text"), is(colorText));
+		String color = record.getAsString("color-style");
+		if (!color.contains(String.format("\"fill_foreground_color\":\"%02x%02x%02x\"", r, g, b))) {
+			fail(color);
+		}
+		String border = record.getAsString("border-style");
+		if (!border.contains(String.format("\"border_top\":%d", top.getCode()))) {
+			fail(border);
+		}
+		if (!border.contains(String.format("\"border_bottom\":%d", bottom.getCode()))) {
+			fail(border);
+		}
+		if (!border.contains(String.format("\"border_left\":%d", left.getCode()))) {
+			fail(border);
+		}
+		if (!border.contains(String.format("\"border_right\":%d", right.getCode()))) {
+			fail(border);
+		}
+	}
+
 	@Theory
 	public void testStyle_keys(String excelFile) throws ParseException {
 		try (EmbulkPluginTester tester = new EmbulkPluginTester()) {
@@ -130,11 +170,11 @@ public class TestPoiExcelParserPlugin_cellStyle {
 			List<OutputRecord> result = tester.runParser(inFile, parser);
 
 			assertThat(result.size(), is(5));
-			check2(result, 0, "red", 255, 0, 0, "top", CellStyle.BORDER_THIN, 0, 0, 0);
-			check2(result, 1, "green", 0, 128, 0, null, 0, 0, 0, 0);
-			check2(result, 2, "blue", 0, 0, 255, "left", 0, 0, CellStyle.BORDER_THIN, 0);
-			check2(result, 3, "white", 255, 255, 255, "right", 0, 0, 0, CellStyle.BORDER_THIN);
-			check2(result, 4, "black", 0, 0, 0, "bottom", 0, CellStyle.BORDER_MEDIUM, 0, 0);
+			check2(result, 0, "red", 255, 0, 0, "top", BorderStyle.THIN, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE);
+			check2(result, 1, "green", 0, 128, 0, null, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE);
+			check2(result, 2, "blue", 0, 0, 255, "left", BorderStyle.NONE, BorderStyle.NONE, BorderStyle.THIN, BorderStyle.NONE);
+			check2(result, 3, "white", 255, 255, 255, "right", BorderStyle.NONE, BorderStyle.NONE, BorderStyle.NONE, BorderStyle.THIN);
+			check2(result, 4, "black", 0, 0, 0, "bottom", BorderStyle.NONE, BorderStyle.MEDIUM, BorderStyle.NONE, BorderStyle.NONE);
 		}
 	}
 }
