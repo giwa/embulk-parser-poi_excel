@@ -156,6 +156,8 @@ public class PoiExcelParserPlugin implements ParserPlugin {
 
 	@Override
 	public void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput output) {
+		// TODO: delete this
+		System.out.println("NEW POIPOI");
 		PluginTask task = taskSource.loadTask(PluginTask.class);
 
 		List<String> sheetNames = new ArrayList<>();
